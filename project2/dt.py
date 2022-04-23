@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import sys
 
+
 # Information Gain / Gain Ratio measure 계산
 def entropy(target):
     _, count = np.unique(target, return_counts=True)
@@ -67,7 +68,7 @@ def gini_index(dataset, split_attribute, target_attribute):
                          (len(child_b) / total) * get_gini(child_b[target_attribute])
 
             result = before_gini - child_gini
-            if result > diff_gini:
+            if result >= diff_gini:
                 diff_gini = result
                 best_split = [tuple(comb), tuple(counter)]
 
@@ -112,14 +113,15 @@ def make_decision_tree(dataset, split_attributes, target_attribute):
         # print('no split attributes')
         return major
         # return minor
-    split = ''
+
+    split = split_attributes[0]
     gain = 0
     best_comb = []
     for attr in split_attributes:
         # info = information_gain(dataset, attr, target_attribute)
         # info = gain_ratio(dataset, attr, target_attribute)
         comb, info = gini_index(dataset, attr, target_attribute)
-        if gain < info:
+        if gain <= info:
             gain = info
             split = attr
             best_comb = comb
@@ -147,8 +149,8 @@ def make_decision_tree(dataset, split_attributes, target_attribute):
             next_split_attributes = next_split_attributes.drop(split)
 
         tree[comb] = make_decision_tree(child, next_split_attributes, target_attribute)
-        # tree[None] = major
-        tree[None] = minor
+        tree[None] = major
+        # tree[None] = minor
 
     return {split: tree}
     # Gini Index End
@@ -159,12 +161,13 @@ def find_major(classification, count):
     major = 0
     result = classification[0]
     for cnt, target in zip(count, classification):
-        if major < cnt:
+        if major <= cnt:
             result = target
             major = cnt
     return result
 
 
+# 현재 단계의 target 중 가장 적은 값을 찾는 함수
 def find_minor(classification, count):
     minor = math.inf
     result = classification[0]
@@ -174,11 +177,13 @@ def find_minor(classification, count):
             minor = cnt
     return result
 
+
 def make_random_value(classification):
     target = np.unique(classification)
-    idx = random.randint(0, len(target)-1)
+    idx = random.randint(0, len(target) - 1)
     print(target, idx)
     return target[idx]
+
 
 # Information Gain / Gain Ratio Tree 로 classify 하는 함수
 def classify_by_info(item, tree):
@@ -226,7 +231,7 @@ def main():
     # 디버깅 용
     training_file = 'dt_train1.txt'
     test_file = 'dt_test1.txt'
-    output_file = 'dt_result1.txt'
+    output_file = 'test/dt_result1.txt'
 
     if len(argv) != 1:
         training_file = argv[1]
@@ -237,7 +242,6 @@ def main():
     test = pd.read_csv(test_file, sep='\t')
 
     target_attribute = training.columns[-1]
-
     tree = make_decision_tree(training, training.columns[:-1], target_attribute)
 
     # classification = [classify_by_info(test.iloc[idx], tree) for idx in range(len(test))]
