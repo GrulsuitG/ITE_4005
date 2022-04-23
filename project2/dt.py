@@ -231,7 +231,7 @@ def main():
     # 디버깅 용
     training_file = 'dt_train1.txt'
     test_file = 'dt_test1.txt'
-    output_file = 'test/dt_result1.txt'
+    output_file = 'dt_result1.txt'
 
     if len(argv) != 1:
         training_file = argv[1]
