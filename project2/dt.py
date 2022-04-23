@@ -1,10 +1,10 @@
 import itertools
 import math
+import random
 
 import numpy as np
 import pandas as pd
 import sys
-
 
 # Information Gain / Gain Ratio measure 계산
 def entropy(target):
@@ -104,13 +104,14 @@ def make_decision_tree(dataset, split_attributes, target_attribute):
         return classification[0]
 
     major = find_major(classification, count)
+    minor = find_minor(classification, count)
 
     # 만약 더이상 분기할 attribute 가 없으면 target_attribute 중 가장 major 한 값을 return 한다
     # 일종의 예외 처리
     if len(split_attributes) == 0:
-        print('no split attributes')
+        # print('no split attributes')
         return major
-
+        # return minor
     split = ''
     gain = 0
     best_comb = []
@@ -126,12 +127,13 @@ def make_decision_tree(dataset, split_attributes, target_attribute):
     # Information Gain / Gain Ratio
     # split_attributes = split_attributes.drop(split)
     # children, value = split_data(dataset, split)
-
+    #
     # tree = {}
     # for child, val in zip(children, value):
     #     tree[val] = make_decision_tree(child, split_attributes, target_attribute)
-    # tree[None] = major
-    #
+    # # tree[None] = major
+    # # tree[None] = minor
+    # tree[None] = make_random_value(dataset[target_attribute])
     # return {split: tree}
     # Information Gain / Gain Ratio End
 
@@ -145,7 +147,8 @@ def make_decision_tree(dataset, split_attributes, target_attribute):
             next_split_attributes = next_split_attributes.drop(split)
 
         tree[comb] = make_decision_tree(child, next_split_attributes, target_attribute)
-        tree[None] = major
+        # tree[None] = major
+        tree[None] = minor
 
     return {split: tree}
     # Gini Index End
@@ -154,13 +157,28 @@ def make_decision_tree(dataset, split_attributes, target_attribute):
 # 현재 단계의 target 중 가장 많은 값을 찾는 함수
 def find_major(classification, count):
     major = 0
-    result = ''
+    result = classification[0]
     for cnt, target in zip(count, classification):
         if major < cnt:
             result = target
             major = cnt
     return result
 
+
+def find_minor(classification, count):
+    minor = math.inf
+    result = classification[0]
+    for cnt, target in zip(count, classification):
+        if minor >= cnt:
+            result = target
+            minor = cnt
+    return result
+
+def make_random_value(classification):
+    target = np.unique(classification)
+    idx = random.randint(0, len(target)-1)
+    print(target, idx)
+    return target[idx]
 
 # Information Gain / Gain Ratio Tree 로 classify 하는 함수
 def classify_by_info(item, tree):
@@ -171,7 +189,12 @@ def classify_by_info(item, tree):
     child = tree[attr]
     feature = item[attr]
 
-    return classify_by_info(item, child.get(feature))
+    if child.get(feature) is None:
+        subtree = child[None]
+    else:
+        subtree = child[feature]
+
+    return classify_by_info(item, subtree)
 
 
 # Gini Index Tree 로 classify 하는 함수
@@ -189,21 +212,26 @@ def classify_by_gini(item, tree):
             if feature in key:
                 feature = key
                 break
+    if child.get(feature) is None:
+        subtree = child[None]
+    else:
+        subtree = child[feature]
 
-    return classify_by_gini(item, child.get(feature))
+    return classify_by_gini(item, subtree)
 
 
 def main():
     argv = sys.argv
 
-    training_file = argv[1]
-    test_file = argv[2]
-    output_file = argv[3]
-
     # 디버깅 용
-    # training_file = 'dt_train1.txt'
-    # test_file = 'dt_test1.txt'
-    # output_file = 'dt_result1.txt'
+    training_file = 'dt_train1.txt'
+    test_file = 'dt_test1.txt'
+    output_file = 'dt_result1.txt'
+
+    if len(argv) != 1:
+        training_file = argv[1]
+        test_file = argv[2]
+        output_file = argv[3]
 
     training = pd.read_csv(training_file, sep='\t')
     test = pd.read_csv(test_file, sep='\t')
