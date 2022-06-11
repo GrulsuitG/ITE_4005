@@ -15,10 +15,11 @@ class Recommend:
         self.bias_user = None
         self.bias_item = None
 
-        self.lr = 0.0001
+        self.lr = 0.005
         self.reg = 0.02
         self.factors = 100
         self.epochs = 20
+
 
     def fit(self, X, y):
         unique_user = np.unique(X[:, 0])
@@ -27,8 +28,8 @@ class Recommend:
         bias_user = np.zeros(unique_user.size, np.double)
         bias_item = np.zeros(unique_item.size, np.double)
 
-        user_mat = np.random.rand(len(unique_user), self.factors)
-        item_mat = np.random.rand(self.factors, len(unique_item))
+        user_mat = np.random.normal(0, 0.1, (len(unique_user), self.factors))
+        item_mat = np.random.normal(0, 0.1, (self.factors, len(unique_item)))
 
         mean = np.mean(y)
 
